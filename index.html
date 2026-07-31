@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Greenhouse Salan Controller</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700&display=swap%22 rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="brand-badge">
+                    <i class="fa-solid fa-leaf"></i>
+                </div>
+                <div>
+                    <h1 class="app-title">ระบบควบคุมสแลนโรงเรือน</h1>
+                    <p class="app-subtitle">Smart Greenhouse Shading Control System</p>
+                </div>
+            </div>
+           
+            <div class="header-right">
+                <div class="status-indicator" id="connectionBadge">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Online</span>
+                </div>
+            </div>
+        </header>
+ 
+        <!-- Hero Salan Status & Graphic Visualizer -->
+        <section class="hero-status-card">
+            <div class="status-main-info">
+                <div class="status-header-tag">
+                    <span class="tag-label">สถานะปัจจุบัน</span>
+                    <span class="update-clock"><i class="fa-regular fa-clock"></i> <span id="lastUpdated">--:--:--</span></span>
+                </div>
+               
+                <div class="salan-state-display">
+                    <div id="salanStatusBadge" class="state-pill state-closed">
+                        <span class="pill-dot"></span>
+                        <span class="pill-text">เก็บสแลนอยู่ (CLOSED)</span>
+                    </div>
+                    <div class="mode-badge" id="modeBadge">
+                        <i class="fa-solid fa-robot"></i> โหมด Auto
+                    </div>
+                </div>
+ 
+                <!-- Interactive Greenhouse Visualizer -->
+                <div class="greenhouse-graphic-container">
+                    <div class="sky-bg">
+                        <div class="sun-element"><i class="fa-solid fa-sun"></i></div>
+                    </div>
+                    <div class="greenhouse-structure">
+                        <div class="roof-arch">
+                            <div class="salan-mesh-overlay" id="salanNet"></div>
+                        </div>
+                        <div class="glass-body">
+                            <div class="crop-plants">
+                                <i class="fa-solid fa-seedling"></i>
+                                <i class="fa-solid fa-seedling"></i>
+                                <i class="fa-solid fa-seedling"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+ 
+            <!-- Mode Selector & Controls -->
+            <div class="status-control-panel">
+                <div class="control-section-header">
+                    <h3><i class="fa-solid fa-sliders"></i> สลับโหมดการทำงาน</h3>
+                    <p class="control-desc">เลือกโหมดอัตโนมัติหรือสั่งงานด้วยตนเอง</p>
+                </div>
+ 
+                <div class="mode-segmented-pill">
+                    <button id="btnAuto" class="segment-btn active">
+                        <i class="fa-solid fa-robot"></i>
+                        <span>อัตโนมัติ (Auto)</span>
+                    </button>
+                    <button id="btnManual" class="segment-btn">
+                        <i class="fa-solid fa-hand-pointer"></i>
+                        <span>ควบคุมเอง (Manual)</span>
+                    </button>
+                </div>
+ 
+                <!-- Manual Command Buttons -->
+                <div id="manualControls" class="manual-control-box disabled-box">
+                    <div class="manual-notice" id="manualNotice">
+                        <i class="fa-solid fa-circle-info"></i> สลับเป็นโหมด Manual เพื่อเปิดใช้งานปุ่มสั่งงาน
+                    </div>
+                    <div class="manual-btn-grid">
+                        <button id="btnOpen" class="cmd-btn cmd-open" disabled>
+                            <i class="fa-solid fa-umbrella"></i>
+                            <span>สั่งกางสแลน</span>
+                        </button>
+                        <button id="btnClose" class="cmd-btn cmd-close" disabled>
+                            <i class="fa-solid fa-circle-xmark"></i>
+                            <span>สั่งเก็บสแลน</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+ 
+        <!-- Realtime Sensor Metrics Section -->
+        <section class="section-container">
+            <div class="section-header">
+                <h2><i class="fa-solid fa-chart-simple"></i> ข้อมูลเซ็นเซอร์สภาวะแวดล้อม Realtime</h2>
+            </div>
+           
+            <div class="sensor-cards-grid">
+                <!-- Temp Metric -->
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">อุณหภูมิ (Temperature)</span>
+                        <div class="metric-icon"><i class="fa-solid fa-temperature-high"></i></div>
+                    </div>
+                    <div class="metric-value-row">
+                        <span class="metric-val" id="valTemp">--</span>
+                        <span class="metric-unit">°C</span>
+                    </div>
+                    <div class="metric-progress-wrapper">
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="barTemp" style="width: 0%"></div>
+                        </div>
+                        <div class="metric-range">
+                            <span>0°C</span>
+                            <span>50°C</span>
+                        </div>
+                    </div>
+                </div>
+ 
+                <!-- Humid Metric -->
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">ความชื้นสัมพัทธ์ (Humidity)</span>
+                        <div class="metric-icon"><i class="fa-solid fa-droplet"></i></div>
+                    </div>
+                    <div class="metric-value-row">
+                        <span class="metric-val" id="valHumid">--</span>
+                        <span class="metric-unit">%</span>
+                    </div>
+                    <div class="metric-progress-wrapper">
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="barHumid" style="width: 0%"></div>
+                        </div>
+                        <div class="metric-range">
+                            <span>0%</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+                </div>
+ 
+                <!-- Light Metric -->
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">ความเข้มแสง (Light Intensity)</span>
+                        <div class="metric-icon"><i class="fa-solid fa-sun"></i></div>
+                    </div>
+                    <div class="metric-value-row">
+                        <span class="metric-val" id="valLight">--</span>
+                        <span class="metric-unit">lx</span>
+                    </div>
+                    <div class="metric-progress-wrapper">
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="barLight" style="width: 0%"></div>
+                        </div>
+                        <div class="metric-range">
+                            <span>0 lx</span>
+                            <span>60,000 lx</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+ 
+        <!-- Threshold Settings Section -->
+        <section class="section-container">
+            <div class="section-header">
+                <h2><i class="fa-solid fa-sliders"></i> ตั้งค่าเงื่อนไขการทำงานอัตโนมัติ</h2>
+            </div>
+ 
+            <form id="settingsForm" class="settings-card">
+                <div class="settings-columns-grid">
+                    <!-- Open Trigger Panel -->
+                    <div class="config-panel panel-open">
+                        <div class="panel-header">
+                            <div class="panel-badge"><i class="fa-solid fa-arrow-up-from-bracket"></i> เงื่อนไขกางสแลน</div>
+                            <p class="panel-desc">ทำงานทันทีเมื่อถึงเกณฑ์ (อย่างใดอย่างหนึ่ง)</p>
+                        </div>
+ 
+                        <div class="field-group">
+                            <label for="setOpenTemp">อุณหภูมิสูงกว่าเกณฑ์</label>
+                            <div class="input-container">
+                                <input type="number" id="setOpenTemp" step="0.1" required placeholder="35.0">
+                                <span class="unit-tag">°C</span>
+                            </div>
+                        </div>
+ 
+                        <div class="field-group">
+                            <label for="setOpenLight">ความเข้มแสงมากกว่าเกณฑ์</label>
+                            <div class="input-container">
+                                <input type="number" id="setOpenLight" step="100" required placeholder="40000">
+                                <span class="unit-tag">lx</span>
+                            </div>
+                        </div>
+                    </div>
+ 
+                    <!-- Close Trigger Panel -->
+                    <div class="config-panel panel-close">
+                        <div class="panel-header">
+                            <div class="panel-badge"><i class="fa-solid fa-arrow-down-to-bracket"></i> เงื่อนไขเก็บสแลน</div>
+                            <p class="panel-desc">ทำงานเมื่อปลอดภัย (ทั้งแสงและอุณหภูมิต่ำ)</p>
+                        </div>
+ 
+                        <div class="field-group">
+                            <label for="setCloseTemp">อุณหภูมิต่ำกว่าเกณฑ์</label>
+                            <div class="input-container">
+                                <input type="number" id="setCloseTemp" step="0.1" required placeholder="30.0">
+                                <span class="unit-tag">°C</span>
+                            </div>
+                        </div>
+ 
+                        <div class="field-group">
+                            <label for="setCloseLight">ความเข้มแสงน้อยกว่าเกณฑ์</label>
+                            <div class="input-container">
+                                <input type="number" id="setCloseLight" step="100" required placeholder="10000">
+                                <span class="unit-tag">lx</span>
+                            </div>
+                        </div>
+                    </div>
+ 
+                    <!-- System Motor Parameters -->
+                    <div class="config-panel panel-system">
+                        <div class="panel-header">
+                            <div class="panel-badge"><i class="fa-solid fa-microchip"></i> พารามิเตอร์ระบบ</div>
+                            <p class="panel-desc">ตั้งค่าระยะเวลาหมุนและหน่วงเวลา</p>
+                        </div>
+ 
+                        <div class="field-group">
+                            <label for="setDelay">เวลาหน่วงสะสมเก็บสแลน</label>
+                            <div class="input-container">
+                                <input type="number" id="setDelay" step="1" required placeholder="60">
+                                <span class="unit-tag">วินาที</span>
+                            </div>
+                        </div>
+ 
+                        <div class="field-group">
+                            <label for="setMotorRevolutions">จำนวนรอบหมุนของมอเตอร์</label>
+                            <div class="input-container">
+                                <input type="number" id="setMotorRevolutions" step="0.5" required placeholder="5.0">
+                                <span class="unit-tag">รอบ</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+ 
+                <div class="form-submit-footer">
+                    <button type="submit" class="submit-btn" id="btnSaveSettings">
+                        <i class="fa-solid fa-check"></i>
+                        <span>บันทึกการตั้งค่าระบบ</span>
+                    </button>
+                    <span id="saveMessage" class="toast-feedback"></span>
+                </div>
+            </form>
+        </section>
+ 
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>Smart Greenhouse Shading Control System &bull; Minimal Monochrome UX Edition</p>
+        </footer>
+    </div>
+ 
+    <script src="script.js"></script>
+</body>
+</html>
+ 
+ 
