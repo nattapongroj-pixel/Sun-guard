@@ -5,22 +5,22 @@
 :root {
     --font-family: 'Prompt', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 
-    /* Warm Porcelain Light Palette (Soft on Eyes, High Legibility) */
-    --bg-app: #f7f7f5;
+    /* Soft Pastel Nature Palette */
+    --bg-app: #f6fbf7; /* Very light pastel mint background */
     --card-bg: #ffffff;
-    --card-border: #e4e4e7;
-    --card-border-dark: #18181b;
+    --card-border: #dbead5;
+    --card-border-dark: #a3c9a8;
 
-    /* Monochrome Shades */
-    --color-black: #09090b;
-    --color-dark-gray: #27272a;
-    --color-mid-gray: #71717a;
-    --color-light-gray: #a1a1aa;
-    --color-subtle-bg: #f4f4f5;
+    /* Softened Text & Elements */
+    --color-black: #344c46; /* Deep slate green */
+    --color-dark-gray: #57756f;
+    --color-mid-gray: #88a39d;
+    --color-light-gray: #baccc8;
+    --color-subtle-bg: #eaf3ee; /* Soft pastel green for pills/badges */
 
-    /* Interactive Fills */
-    --btn-black: #18181b;
-    --btn-black-hover: #27272a;
+    /* Interactive Fills (Pastel Green) */
+    --btn-black: #85bda6; /* Pastel green button */
+    --btn-black-hover: #6b9e89;
 
     /* Elevation Shadows */
     --shadow-sm: 0 2px 8px -1px rgba(0, 0, 0, 0.04);
