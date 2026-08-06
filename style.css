@@ -452,30 +452,27 @@ body::before {
     justify-content: center;
     gap: 8px;
     transition: var(--transition);
-}
-
-.cmd-btn.cmd-open {
-    background: var(--color-black);
-    color: #ffffff;
-    border: 1px solid var(--color-black);
-}
-
-.cmd-btn.cmd-open:hover:not(:disabled) {
-    background: var(--color-dark-gray);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-}
-
-.cmd-btn.cmd-close {
+    
     background: #ffffff;
     color: var(--color-black);
     border: 1px solid var(--card-border);
 }
 
-.cmd-btn.cmd-close:hover:not(:disabled) {
+.cmd-btn:hover:not(:disabled) {
     background: var(--color-subtle-bg);
     border-color: var(--color-black);
     transform: translateY(-2px);
+}
+
+.cmd-btn.active {
+    background: var(--color-black);
+    color: #ffffff;
+    border: 1px solid var(--color-black);
+}
+
+.cmd-btn.active:hover:not(:disabled) {
+    background: var(--color-dark-gray);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
 .cmd-btn:disabled {

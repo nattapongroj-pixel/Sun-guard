@@ -91,18 +91,24 @@ db.ref('status').on('value', (snapshot) => {
                 salanStatusBadge.className = 'state-pill state-open';
             }
             if (salanNet) salanNet.style.width = '100%';
+            if (btnOpen) btnOpen.classList.add('active');
+            if (btnClose) btnClose.classList.remove('active');
         } else if (state === 'closed') {
             if (salanStatusBadge) {
                 salanStatusBadge.innerHTML = '<span class="pill-dot"></span><span class="pill-text">เก็บสแลนอยู่ (CLOSED)</span>';
                 salanStatusBadge.className = 'state-pill state-closed';
             }
             if (salanNet) salanNet.style.width = '0%';
+            if (btnClose) btnClose.classList.add('active');
+            if (btnOpen) btnOpen.classList.remove('active');
         } else if (state === 'moving') {
             if (salanStatusBadge) {
                 salanStatusBadge.innerHTML = '<span class="pill-dot"></span><span class="pill-text">กำลังหมุน... (MOVING)</span>';
                 salanStatusBadge.className = 'state-pill state-moving';
             }
             if (salanNet) salanNet.style.width = '50%';
+            if (btnOpen) btnOpen.classList.remove('active');
+            if (btnClose) btnClose.classList.remove('active');
         }
 
         // Update Mode
