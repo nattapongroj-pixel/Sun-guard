@@ -45,13 +45,83 @@ const setMotorRevolutions = document.getElementById('setMotorRevolutions');
 const saveMessage = document.getElementById('saveMessage');
 
 let currentMode = 'auto';
+let currentSalanState = 'closed';
+let lastDataTime = 0;
+const MAX_LOGS = 10;
+let logHistory = [];
+
+function addLogEntry(temp, humid, light, state) {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('th-TH');
+    
+    const entry = {
+        time: timeStr,
+        temp: temp,
+        humid: humid,
+        light: light,
+        state: state
+    };
+    
+    logHistory.unshift(entry);
+    if (logHistory.length > MAX_LOGS) {
+        logHistory.pop();
+    }
+    
+    renderLogs();
+}
+
+function renderLogs() {
+    const dataLogList = document.getElementById('dataLogList');
+    if (!dataLogList) return;
+    
+    dataLogList.innerHTML = '';
+    logHistory.forEach(log => {
+        const li = document.createElement('li');
+        li.className = 'log-item';
+        
+        let stateClass = 'closed';
+        let stateText = 'CLOSED';
+        if (log.state === 'open') { stateClass = 'open'; stateText = 'OPEN'; }
+        else if (log.state === 'moving') { stateClass = 'moving'; stateText = 'MOVING'; }
+        
+        li.innerHTML = `
+            <div class="log-time"><i class="fa-regular fa-clock"></i> ${log.time}</div>
+            <div class="log-data">
+                <span><i class="fa-solid fa-temperature-half"></i> ${log.temp.toFixed(1)}°C</span>
+                <span><i class="fa-solid fa-droplet"></i> ${log.humid.toFixed(1)}%</span>
+                <span><i class="fa-solid fa-sun"></i> ${Math.round(log.light).toLocaleString()} lx</span>
+            </div>
+            <div class="log-state ${stateClass}">${stateText}</div>
+        `;
+        dataLogList.appendChild(li);
+    });
+}
 
 // Helper to update timestamp
 function updateTimestamp() {
     const now = new Date();
+    lastDataTime = Date.now();
+    const dateStr = now.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
     const timeStr = now.toLocaleTimeString('th-TH');
-    if (lastUpdated) lastUpdated.innerText = timeStr;
+    if (lastUpdated) lastUpdated.innerText = `${dateStr} เวลา ${timeStr}`;
 }
+
+// Watchdog Timer to check ESP32 Online/Offline status
+setInterval(() => {
+    const connectionBadge = document.getElementById('connectionBadge');
+    const connectionText = document.querySelector('#connectionBadge .status-text');
+    
+    // ถ้ารับข้อมูลครั้งล่าสุดเกิน 15 วินาที ถือว่า ESP32 หลุดการเชื่อมต่อ (ปกติ ESP32 จะส่งทุก 2 วินาที)
+    if (Date.now() - lastDataTime > 15000 && lastDataTime !== 0) {
+        if (connectionBadge) connectionBadge.classList.add('offline');
+        if (connectionText) connectionText.innerText = 'ESP32 Offline';
+    } else if (lastDataTime !== 0) {
+        if (connectionBadge) connectionBadge.classList.remove('offline');
+        if (connectionText) connectionText.innerText = 'ESP32 Online';
+    } else {
+        if (connectionText) connectionText.innerText = 'Connecting...';
+    }
+}, 2000);
 
 // ---------------------------------------------------------
 // 1. Read Data from Firebase (Realtime)
@@ -75,6 +145,7 @@ db.ref('sensorData').on('value', (snapshot) => {
         if (barLight) barLight.style.width = Math.min(Math.max((light / 60000) * 100, 0), 100) + '%';
 
         updateTimestamp();
+        addLogEntry(temp, humid, light, currentSalanState);
     }
 });
 
@@ -83,6 +154,7 @@ db.ref('status').on('value', (snapshot) => {
     const data = snapshot.val();
     if (data) {
         const state = data.salanState || 'closed';
+        currentSalanState = state;
 
         // Update Salan Status Badge & Graphic Visualizer
         if (state === 'open') {
