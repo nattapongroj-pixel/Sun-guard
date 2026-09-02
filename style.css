@@ -93,6 +93,22 @@ body::before {
     gap: 16px;
 }
 
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.line-add-btn {
+    display: flex;
+    align-items: center;
+    transition: var(--transition);
+}
+
+.line-add-btn:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
+}
 .brand-badge {
     width: 44px;
     height: 44px;
